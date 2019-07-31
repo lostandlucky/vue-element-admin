@@ -1,6 +1,6 @@
 <template>
   <div :class="{'show':show}" class="header-search">
-    <svg-icon class-name="search-icon" icon-class="search" @click="click" />
+    <svg-icon class-name="search-icon" icon-class="search" @click.stop="click" />
     <el-select
       ref="headerSearchSelect"
       v-model="search"
@@ -10,16 +10,18 @@
       remote
       placeholder="Search"
       class="header-search-select"
-      @change="change">
-      <el-option v-for="item in options" :key="item.path" :value="item" :label="item.title.join(' > ')"/>
+      @change="change"
+    >
+      <el-option v-for="item in options" :key="item.path" :value="item" :label="item.title.join(' > ')" />
     </el-select>
   </div>
 </template>
 
 <script>
+// fuse is a lightweight fuzzy-search module
+// make search results more in line with expectations
 import Fuse from 'fuse.js'
 import path from 'path'
-import i18n from '@/lang'
 
 export default {
   name: 'HeaderSearch',
@@ -35,15 +37,9 @@ export default {
   computed: {
     routes() {
       return this.$store.getters.permission_routes
-    },
-    lang() {
-      return this.$store.getters.language
     }
   },
   watch: {
-    lang() {
-      this.searchPool = this.generateRoutes(this.routes)
-    },
     routes() {
       this.searchPool = this.generateRoutes(this.routes)
     },
@@ -113,12 +109,9 @@ export default {
         }
 
         if (router.meta && router.meta.title) {
-          // generate internationalized title
-          const i18ntitle = i18n.t(`route.${router.meta.title}`)
+          data.title = [...data.title, router.meta.title]
 
-          data.title = [...data.title, i18ntitle]
-
-          if (router.redirect !== 'noredirect') {
+          if (router.redirect !== 'noRedirect') {
             // only push the routes with title
             // special case: need to exclude parent router without redirect
             res.push(data)
